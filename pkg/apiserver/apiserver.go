@@ -146,7 +146,7 @@ func (s *Service) Start(ctx context.Context) error {
 
 	s.app = fx.New(
 		fx.Logger(utils.NewFxPrinter()),
-		fx.Supply(featureflag.NewRegistry(s.config.FeatureVersion)),
+		fx.Supply(featureflag.NewRegistry(version.PDVersion)),
 		Modules,
 		fx.Provide(
 			s.provideLocals,

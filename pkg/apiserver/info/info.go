@@ -8,7 +8,6 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/Masterminds/semver"
 	"github.com/gin-gonic/gin"
 	"github.com/thoas/go-funk"
 	"go.etcd.io/etcd/clientv3"
@@ -35,12 +34,17 @@ type ServiceParams struct {
 }
 
 type Service struct {
-	params       ServiceParams
+	params     ServiceParams
+	featureNgm *featureflag.FeatureFlag
+
 	lifecycleCtx context.Context
 }
 
 func NewService(lc fx.Lifecycle, p ServiceParams) *Service {
-	s := &Service{params: p}
+	s := &Service{
+		params:     p,
+		featureNgm: p.FeatureFlags.Register("ngm", ">= 5.4.0"),
+	}
 
 	lc.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {
@@ -78,22 +82,21 @@ type InfoResponse struct { // nolint
 // @Security JwtAuth
 // @Failure 401 {object} rest.ErrorResponse
 func (s *Service) infoHandler(c *gin.Context) {
-	// Checking ngm deployments
-	// drop "-alpha-xxx" suffix
-	versionWithoutSuffix := strings.Split(s.params.Config.FeatureVersion, "-")[0]
-	v, err := semver.NewVersion(versionWithoutSuffix)
-	if err != nil {
-		rest.Error(c, err)
-		return
+	resp := InfoResponse{
+		Version:            version.GetInfo(),
+		EnableTelemetry:    s.params.Config.EnableTelemetry,
+		EnableExperimental: s.params.Config.EnableExperimental,
+		SupportedFeatures:  s.params.FeatureFlags.SupportedFeatures(),
+		NgmState:           s.checkNgmState(),
 	}
-	constraint, err := semver.NewConstraint(">= v5.4.0")
-	if err != nil {
-		rest.Error(c, err)
-		return
-	}
+	c.JSON(http.StatusOK, resp)
+}
 
+// Checking ngm deployments.
+func (s *Service) checkNgmState() utils.NgmState {
 	ngmState := utils.NgmStateNotSupported
-	if constraint.Check(v) {
+
+	if s.featureNgm.IsSupported() {
 		ngmState = utils.NgmStateNotStarted
 		addr, err := topology.FetchNgMonitoringTopology(s.lifecycleCtx, s.params.EtcdClient)
 		if err == nil && addr != "" {
@@ -101,14 +104,7 @@ func (s *Service) infoHandler(c *gin.Context) {
 		}
 	}
 
-	resp := InfoResponse{
-		Version:            version.GetInfo(),
-		EnableTelemetry:    s.params.Config.EnableTelemetry,
-		EnableExperimental: s.params.Config.EnableExperimental,
-		SupportedFeatures:  s.params.FeatureFlags.SupportedFeatures(),
-		NgmState:           ngmState,
-	}
-	c.JSON(http.StatusOK, resp)
+	return ngmState
 }
 
 type WhoAmIResponse struct {

@@ -4,7 +4,9 @@ BUILD_TAGS ?=
 
 LDFLAGS ?=
 
-FEATURE_VERSION ?= 6.0.0
+PD_VERSION ?= 6.0.0
+
+TIDB_VERSION ?= latest
 
 ifeq ($(UI),1)
 	BUILD_TAGS += ui_server
@@ -12,11 +14,9 @@ endif
 
 LDFLAGS += -X "$(DASHBOARD_PKG)/pkg/utils/version.InternalVersion=$(shell grep -v '^\#' ./release-version)"
 LDFLAGS += -X "$(DASHBOARD_PKG)/pkg/utils/version.Standalone=Yes"
-LDFLAGS += -X "$(DASHBOARD_PKG)/pkg/utils/version.PDVersion=N/A"
+LDFLAGS += -X "$(DASHBOARD_PKG)/pkg/utils/version.PDVersion=$(PD_VERSION)"
 LDFLAGS += -X "$(DASHBOARD_PKG)/pkg/utils/version.BuildTime=$(shell date -u '+%Y-%m-%d %I:%M:%S')"
 LDFLAGS += -X "$(DASHBOARD_PKG)/pkg/utils/version.BuildGitHash=$(shell git rev-parse HEAD)"
-
-TIDB_VERSION ?= latest
 
 default: server
 
@@ -73,11 +73,11 @@ endif
 
 .PHONY: run
 run:
-	bin/tidb-dashboard --debug --experimental --feature-version "$(FEATURE_VERSION)" --host 0.0.0.0
+	bin/tidb-dashboard --debug --experimental --host 0.0.0.0
 
 test_e2e_compat_features:
 	cd ui &&\
-	yarn run:e2e-test:compat-features --env FEATURE_VERSION=$(FEATURE_VERSION) TIDB_VERSION=$(TIDB_VERSION)
+	yarn run:e2e-test:compat-features --env PD_VERSION=$(PD_VERSION) TIDB_VERSION=$(TIDB_VERSION)
 
 test_e2e_common_features:
 	cd ui &&\

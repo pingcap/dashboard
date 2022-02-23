@@ -25,20 +25,19 @@ type ServiceParams struct {
 }
 
 type Service struct {
-	FeatureTopSQL *featureflag.FeatureFlag
-
-	params ServiceParams
+	params        ServiceParams
+	featureTopSQL *featureflag.FeatureFlag
 }
 
 func newService(p ServiceParams, ff *featureflag.Registry) *Service {
-	return &Service{params: p, FeatureTopSQL: ff.Register("topsql", ">= 5.4.0")}
+	return &Service{params: p, featureTopSQL: ff.Register("topsql", ">= 5.4.0")}
 }
 
 func registerRouter(r *gin.RouterGroup, auth *user.AuthService, s *Service) {
 	endpoint := r.Group("/topsql")
 	endpoint.Use(
 		auth.MWAuthRequired(),
-		s.FeatureTopSQL.VersionGuard(),
+		s.featureTopSQL.VersionGuard(),
 		utils.MWConnectTiDB(s.params.TiDBClient),
 	)
 	{

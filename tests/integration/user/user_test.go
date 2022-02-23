@@ -53,7 +53,7 @@ func TestUserSuite(t *testing.T) {
 }
 
 func (s *testUserSuite) supportNonRootLogin() bool {
-	return s.authService.FeatureFlagNonRootLogin.IsSupported()
+	return s.authService.FeatureNonRootLogin.IsSupported()
 }
 
 func (s *testUserSuite) SetupSuite() {

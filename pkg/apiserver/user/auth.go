@@ -31,7 +31,7 @@ var (
 )
 
 type AuthService struct {
-	FeatureFlagNonRootLogin *featureflag.FeatureFlag
+	FeatureNonRootLogin *featureflag.FeatureFlag
 
 	middleware     *jwt.GinJWTMiddleware
 	authenticators map[utils.AuthType]Authenticator
@@ -91,9 +91,9 @@ func NewAuthService(featureFlags *featureflag.Registry) *AuthService {
 	}
 
 	service := &AuthService{
-		FeatureFlagNonRootLogin: featureFlags.Register("nonRootLogin", ">= 5.3.0"),
-		middleware:              nil,
-		authenticators:          map[utils.AuthType]Authenticator{},
+		FeatureNonRootLogin: featureFlags.Register("nonRootLogin", ">= 5.3.0"),
+		middleware:          nil,
+		authenticators:      map[utils.AuthType]Authenticator{},
 	}
 
 	middleware, err := jwt.New(&jwt.GinJWTMiddleware{

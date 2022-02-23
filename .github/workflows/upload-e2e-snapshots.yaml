@@ -17,9 +17,9 @@ jobs:
       matrix:
         # test latest features and compatibility of lower version
         include:
-          - feature_version: 6.0.0
+          - pd_version: 6.0.0
             tidb_version: nightly
-          - feature_version: 5.0.0
+          - pd_version: 5.0.0
             tidb_version: v5.0.0
     steps:
       - name: Checkout code
@@ -88,13 +88,13 @@ jobs:
           make run &
         env:
           UI: 1
-          FEATURE_VERSION: ${{ matrix.feature_version }}
+          PD_VERSION: ${{ matrix.pd_version }}
       - name: Run E2E Features Test
         run: make e2e_test
         env:
           SERVER_URL: http://127.0.0.1:12333/dashboard/
           CI: true
-          FEATURE_VERSION: ${{ matrix.feature_version }}
+          PD_VERSION: ${{ matrix.pd_version }}
           TIDB_VERSION: ${{ matrix.tidb_version }}
           CYPRESS_ALLOW_SCREENSHOT: true
       - name: Archive Test Results
@@ -106,5 +106,5 @@ jobs:
       - name: Upload snapshots artifact
         uses: actions/upload-artifact@v2
         with:
-          name: e2e-snapshots-${{ matrix.feature_version }}
+          name: e2e-snapshots-${{ matrix.pd_version }}
           path: ${{ github.workspace }}/ui/cypress/snapshots/**/*

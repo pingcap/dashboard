@@ -28,16 +28,16 @@ type ServiceParams struct {
 }
 
 type Service struct {
-	FeatureFlagConprof *featureflag.FeatureFlag
+	params         ServiceParams
+	featureConprof *featureflag.FeatureFlag
 
-	params       ServiceParams
 	lifecycleCtx context.Context
 }
 
 func newService(lc fx.Lifecycle, p ServiceParams) *Service {
 	s := &Service{
-		FeatureFlagConprof: p.FeatureFlags.Register("conprof", ">= 5.3.0"),
-		params:             p,
+		params:         p,
+		featureConprof: p.FeatureFlags.Register("conprof", ">= 5.3.0"),
 	}
 
 	lc.Append(fx.Hook{
@@ -54,7 +54,7 @@ func newService(lc fx.Lifecycle, p ServiceParams) *Service {
 func registerRouter(r *gin.RouterGroup, auth *user.AuthService, s *Service) {
 	endpoint := r.Group("/continuous_profiling")
 
-	endpoint.Use(s.FeatureFlagConprof.VersionGuard())
+	endpoint.Use(s.featureConprof.VersionGuard())
 	{
 		endpoint.GET("/config", auth.MWAuthRequired(), s.params.NgmProxy.Route("/config"))
 		endpoint.POST("/config", auth.MWAuthRequired(), auth.MWRequireWritePriv(), s.params.NgmProxy.Route("/config"))

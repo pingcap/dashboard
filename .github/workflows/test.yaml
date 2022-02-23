@@ -75,9 +75,9 @@ jobs:
       matrix:
         # test latest features and compatibility of lower version
         include:
-          - feature_version: 6.0.0
+          - pd_version: 6.0.0
             tidb_version: nightly
-          - feature_version: 5.0.0
+          - pd_version: 5.0.0
             tidb_version: v5.0.0
     steps:
       - name: Checkout code
@@ -145,13 +145,13 @@ jobs:
           make run &
         env:
           UI: 1
-          FEATURE_VERSION: ${{ matrix.feature_version }}
+          PD_VERSION: ${{ matrix.pd_version }}
       - name: Run E2E Features Test
         run: make test_e2e
         env:
           SERVER_URL: http://127.0.0.1:12333/dashboard/
           CI: true
-          FEATURE_VERSION: ${{ matrix.feature_version }}
+          PD_VERSION: ${{ matrix.pd_version }}
           TIDB_VERSION: ${{ matrix.tidb_version }}
       - name: Archive Test Results
         if: always()

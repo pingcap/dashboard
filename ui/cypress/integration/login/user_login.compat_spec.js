@@ -1,10 +1,10 @@
 // Copyright 2022 PingCAP, Inc. Licensed under Apache-2.0.
 
 // Test User Login Compatibility
-// FEATURE_VERSION < 5.3.0 of TiDB Dashboard does not support nonRootLogin
-// FEATURE_VERSION >= 5.3.0 of TiDB Dashboard supports nonRootLogin
+// PD_VERSION < 5.3.0 of TiDB Dashboard does not support nonRootLogin
+// PD_VERSION >= 5.3.0 of TiDB Dashboard supports nonRootLogin
 describe('User Login', () => {
-  if (Cypress.env('FEATURE_VERSION') === '6.0.0') {
+  if (Cypress.env('PD_VERSION') === '6.0.0') {
     // Create user test
     before(() => {
       let queryData = {
@@ -35,7 +35,7 @@ describe('User Login', () => {
     })
 
     it('noRootLogin is supported', () => {
-      cy.log('FEATURE_VERSION is: ', Cypress.env('FEATURE_VERSION'))
+      cy.log('PD_VERSION is: ', Cypress.env('PD_VERSION'))
 
       // Check username input is not disabled
       cy.get('[data-e2e=signin_username_input]').should('not.be.disabled')
@@ -57,7 +57,7 @@ describe('User Login', () => {
         expect(response.body).to.have.property('code', 'tidb.tidb_auth_failed')
       })
     })
-  } else if (Cypress.env('FEATURE_VERSION') === '5.0.0') {
+  } else if (Cypress.env('PD_VERSION') === '5.0.0') {
     beforeEach(() => {
       cy.fixture('uri.json').then(function (uri) {
         this.uri = uri
@@ -66,7 +66,7 @@ describe('User Login', () => {
     })
 
     it('noRootLogin is unsupported', () => {
-      cy.log('FEATURE_VERSION is: ', Cypress.env('FEATURE_VERSION'))
+      cy.log('PD_VERSION is: ', Cypress.env('PD_VERSION'))
 
       // Check username input is disabled
       cy.get('[data-e2e=signin_username_input]').should('be.disabled')

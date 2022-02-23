@@ -6,8 +6,6 @@ import (
 	"crypto/tls"
 	"net/url"
 	"strings"
-
-	"github.com/pingcap/tidb-dashboard/pkg/utils/version"
 )
 
 const (
@@ -29,7 +27,6 @@ type Config struct {
 
 	EnableTelemetry    bool
 	EnableExperimental bool
-	FeatureVersion     string // assign the target TiDB version when running TiDB Dashboard as standalone mode
 }
 
 func Default() *Config {
@@ -42,7 +39,6 @@ func Default() *Config {
 		TiDBTLSConfig:      nil,
 		EnableTelemetry:    true,
 		EnableExperimental: false,
-		FeatureVersion:     version.PDVersion,
 	}
 }
 

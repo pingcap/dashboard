@@ -26,6 +26,7 @@ import (
 	"sync"
 	"syscall"
 
+	"github.com/Masterminds/semver"
 	"github.com/pingcap/log"
 	flag "github.com/spf13/pflag"
 	"go.etcd.io/etcd/pkg/transport"
@@ -53,6 +54,10 @@ type DashboardCLIConfig struct {
 
 // NewCLIConfig generates the configuration of the dashboard in standalone mode.
 func NewCLIConfig() *DashboardCLIConfig {
+	if _, err := semver.NewVersion(version.PDVersion); err != nil {
+		log.Fatal("Invalid sematic PD Version", zap.Error(err), zap.String("pd_version", version.PDVersion))
+	}
+
 	cfg := &DashboardCLIConfig{}
 	cfg.CoreConfig = config.Default()
 
@@ -65,7 +70,6 @@ func NewCLIConfig() *DashboardCLIConfig {
 	flag.StringVar(&cfg.CoreConfig.PDEndPoint, "pd", cfg.CoreConfig.PDEndPoint, "PD endpoint address that Dashboard Server connects to")
 	flag.BoolVar(&cfg.CoreConfig.EnableTelemetry, "telemetry", cfg.CoreConfig.EnableTelemetry, "allow telemetry")
 	flag.BoolVar(&cfg.CoreConfig.EnableExperimental, "experimental", cfg.CoreConfig.EnableExperimental, "allow experimental features")
-	flag.StringVar(&cfg.CoreConfig.FeatureVersion, "feature-version", cfg.CoreConfig.FeatureVersion, "target TiDB version for standalone mode")
 
 	showVersion := flag.BoolP("version", "v", false, "print version information and exit")
 
