@@ -39,8 +39,8 @@ func NewMockApp(tb fxtest.TB, tidbVersion string, c *config.Config, opts ...fx.O
 
 // RequireStart calls Start, failing the test if an error is encountered.
 // It also sleep 5 seconds to wait for the server to start.
-func (app *App) RequireStart() *App {
-	if err := app.Start(context.Background()); err != nil {
+func (app *App) RequireStart(ctx context.Context) *App {
+	if err := app.Start(ctx); err != nil {
 		app.tb.Errorf("application didn't start cleanly: %v", err)
 		app.tb.FailNow()
 	}

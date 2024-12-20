@@ -11,6 +11,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"strconv"
+	"sync"
 	"testing"
 	"time"
 
@@ -37,7 +38,9 @@ func TestProxy(t *testing.T) {
 	}
 	p := newProxy(l, map[string]string{"test": fmt.Sprintf("%s:%s", u.Hostname(), u.Port())}, 0, 0)
 	ctx, cancel := context.WithCancel(context.Background())
-	go p.run(ctx)
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+	go p.run(ctx, wg)
 	defer cancel()
 
 	u.Host = l.Addr().String()
@@ -86,7 +89,9 @@ func TestProxyPick(t *testing.T) {
 	}
 	p := newProxy(l, endpoints, 0, 0)
 	ctx, cancel := context.WithCancel(context.Background())
-	go p.run(ctx)
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+	go p.run(ctx, wg)
 	defer cancel()
 
 	for i := 0; i < n; i++ {

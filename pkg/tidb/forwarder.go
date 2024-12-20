@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
@@ -37,6 +38,8 @@ type Forwarder struct {
 	sqlPort     int
 	statusProxy *proxy
 	statusPort  int
+
+	wg *sync.WaitGroup
 }
 
 func (f *Forwarder) Start(ctx context.Context) error {
@@ -53,9 +56,10 @@ func (f *Forwarder) Start(ctx context.Context) error {
 	f.sqlPort = f.sqlProxy.port()
 	f.statusPort = f.statusProxy.port()
 
+	f.wg.Add(3)
 	go f.pollingForTiDB()
-	go f.sqlProxy.run(ctx)
-	go f.statusProxy.run(ctx)
+	go f.sqlProxy.run(ctx, f.wg)
+	go f.statusProxy.run(ctx, f.wg)
 
 	return nil
 }
@@ -70,6 +74,7 @@ func (f *Forwarder) createProxy() (*proxy, error) {
 }
 
 func (f *Forwarder) pollingForTiDB() {
+	defer f.wg.Done()
 	ebo := backoff.NewExponentialBackOff()
 	ebo.MaxInterval = f.config.TiDBPollInterval
 	bo := backoff.WithContext(ebo, f.lifecycleCtx)
@@ -119,9 +124,14 @@ func newForwarder(lc fx.Lifecycle, etcdClient *clientv3.Client) *Forwarder {
 			ProxyCheckInterval:  2 * time.Second,
 		},
 		etcdClient: etcdClient,
+		wg:         &sync.WaitGroup{},
 	}
 	lc.Append(fx.Hook{
 		OnStart: f.Start,
+		OnStop: func(context.Context) error {
+			f.wg.Wait()
+			return nil
+		},
 	})
 	return f
 }

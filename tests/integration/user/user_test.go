@@ -4,6 +4,7 @@ package user
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"testing"
@@ -41,7 +42,8 @@ func TestUserSuite(t *testing.T) {
 		fx.Populate(&authService),
 		fx.Populate(&infoService),
 	)
-	app.RequireStart()
+	ctx, cancel := context.WithCancel(context.Background())
+	app.RequireStart(ctx)
 
 	suite.Run(t, &testUserSuite{
 		db:          db,
@@ -49,6 +51,8 @@ func TestUserSuite(t *testing.T) {
 		infoService: infoService,
 	})
 
+	// exit the app
+	cancel()
 	app.RequireStop()
 }
 

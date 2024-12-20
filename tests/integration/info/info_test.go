@@ -4,6 +4,7 @@ package info
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"testing"
@@ -42,7 +43,8 @@ func TestInfoSuite(t *testing.T) {
 		fx.Populate(&infoService),
 		fx.Populate(&codeService),
 	)
-	app.RequireStart()
+	ctx, cancel := context.WithCancel(context.Background())
+	app.RequireStart(ctx)
 
 	suite.Run(t, &testInfoSuite{
 		db:          db,
@@ -51,6 +53,8 @@ func TestInfoSuite(t *testing.T) {
 		codeService: codeService,
 	})
 
+	// exit the app
+	cancel()
 	app.RequireStop()
 }
 

@@ -201,7 +201,8 @@ func (p *proxy) doCheck(ctx context.Context) {
 	}
 }
 
-func (p *proxy) run(ctx context.Context) {
+func (p *proxy) run(ctx context.Context, wg *sync.WaitGroup) {
+	defer wg.Done()
 	endpoints := make([]string, 0)
 	p.remotes.Range(func(_, value interface{}) bool {
 		r := value.(*remote)
@@ -220,15 +221,24 @@ func (p *proxy) run(ctx context.Context) {
 	}
 	// serve
 	for {
+		type accepted struct {
+			conn net.Conn
+			err  error
+		}
+		accept := make(chan accepted, 1)
+		go func() {
+			conn, err := p.listener.Accept()
+			accept <- accepted{conn, err}
+		}()
+
 		select {
 		case <-ctx.Done():
 			return
-		default:
-			incoming, err := p.listener.Accept()
-			if err != nil {
-				log.Warn("got err from listener", zap.Error(err), zap.String("from", p.listener.Addr().String()))
+		case a := <-accept:
+			if a.err != nil {
+				log.Warn("got err from listener", zap.Error(a.err), zap.String("from", p.listener.Addr().String()))
 			} else {
-				go p.serve(incoming)
+				go p.serve(a.conn)
 			}
 		}
 	}
